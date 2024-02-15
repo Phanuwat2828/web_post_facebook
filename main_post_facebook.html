@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+     <!-- ============================= CSS ========================== -->
+    <style>
+        body{
+            margin: 0;
+            padding: 0;
+        }
+        
+
+    </style>
+
+
+    <!-- ============================= HTML ========================== -->
+    <div class="container">
+         <!-- ============================= Image and text ========================== -->
+        <div class="data_post">
+            <h2 class="image_post_text_show">*ใส่รูปภาพ (ไม่เกิน4รูป) </h2>
+            <div class="del_image">
+                <button class="del_image_bt">ลบรูปภาพ</button>
+            </div>
+             <!-- ============================= Image_upload ========================== -->
+            <div class="image_post">
+                <h2>Upload Image</h2>
+                <h2>Upload Image</h2>
+                <form action="upload.php" method="post" enctype="multipart/form-data">
+                    <input type="file" name="image" accept="image/*">
+                    <button type="submit" name="submit">Upload</button>
+                </form>
+                <div>
+                    <h2>Uploaded Image</h2>
+                    <img src="show_image.php" alt="Uploaded Image">
+                </div>
+            </div>
+             <!-- ============================= text ========================== -->
+            <div class="text_post">
+                
+            </div>
+        </div>
+         <!-- ============================= group and page_facebook ========================== -->
+        <div class="type_post">
+
+        </div>
+    </div>
+
+
+</body>
+</html>

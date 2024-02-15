@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Post</title>
+  <link rel="stylesheet" href="css/facebookpage.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.2/dist/sweetalert2.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+  <style>
+    img{
+      width: 250px;
+    }
+    input[type="datetime-local"] {
+      width: 100%;
+      height: 30px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 5px 10px;
+      font-size: 14px;
+      font-family: sans-serif;
+    }
+    .div-show-imgs{
+      text-align: center;
+      display: grid;
+      grid-template-columns: 50% 50%;
+      grid-template-rows:50% 50%;
+      gap: 1px;
+      padding: 10px;
+      width: 100%;
+    }
+    .div-show-video{
+      text-align: center;
+    }
+    .div-show-video video{
+      height: 480px;
+    }
+    .box-img{
+        overflow: hidden;
+        height: 250px;
+        /* border: #000 solid; */
+    }
+    .img-show{
+        object-fit: cover;
+        width: 100%;
+        height: 100%;
+    }
+    .img-show:hover{
+        opacity: 0.5;
+        cursor: pointer;
+    }
+
+    input[type="datetime-local"]:focus {
+      outline: none;
+      border-color: #000;
+    }
+    .modal{
+        z-index: 100;
+        position: fixed;
+        background: rgba(0,0,0,0.7);
+        transition: all 0.3s;
+        padding: 1rem;
+        display: none;
+        justify-content: center;
+        align-items: center;
+    }
+    .modal-content{
+        width: 50%;
+        height: 80%;
+        background: none;
+        border: none;    
+    }
+    .modal-bodys{
+        overflow-y: scroll;
+    }
+    .modal img{
+        width: 100%;
+        height: auto;
+    }
+  </style>
+</head>
+<body>
+  <%- include('./components/navbarfacebook.ejs') %>
+    <div class="control-panel">
+      <div id="pagesList" class="border p-3 shadow m-2">
+        <p class="h2">เลือกแหล่งที่ต้องการโพสต์</h1>
+        <div class="m-2">
+            <details class="form-control">
+                <summary>เพจ</summary>
+                <% pagesList.forEach(page => { %>
+                <div class="border rounded p-2 shadow">
+                  <input type="checkbox" class="pageaccess" id="<%- page.id %>" value="<%- page.access_token %>">
+                  <label for="<%- page.id %>"><%= page.name %></label>
+                </div>
+                <% }) %>
+              </details>
+        </div>
+        <div class="m-2">
+            <details class="form-control">
+              <summary>กลุ่ม</summary>
+              <% groupsList.forEach(group => { %>
+              <div class="border rounded p-2 shadow">
+                <input type="checkbox" class="groupaccess" id="<%- group.id %>" value="<%- group.id %>">
+                <label for="<%- group.id %>"><%= group.name %></label>
+              </div>
+              <% }) %>
+            </details>
+        </div>
+        <div class="text-end">
+          <button class="btn btn-outline-danger" id="clearPages">ล้างเพจที่เลือก</button>
+          <button class="btn btn-outline-danger" id="clearGroups">ล้างกลุ่มที่เลือก</button>
+          <button class="btn btn-danger" id="clearAll">ล้างทั้งหมด</button>
+        </div>
+      </div>
+      <div class="border p-3 shadow m-2">
+        <div class="border p-3 shadow m-2">
+            <div class="m-2">
+                <p>เลือกรูปภาพ/วิดีโอ</p>
+                <select class="form-control border shadow" id="selectType">
+                    <option class="" value="picture">รูปภาพ</option>
+                    <option value="video">วีดิโอ</option>
+                </select>
+            </div>
+            <div class="mx-2 text-center">
+                <input class="btn btn-primary form-control uploadFile" type="file" id="photoUpload" name="image" accept="image/*" multiple>
+                <input class="btn btn-primary form-control uploadFile" type="file" id="videoUpload" accept="video/*" style="display: none;">
+            </div>
+            <!-- ห้ามลบ ขยายรูปที่กด -->
+            <div class="modal">
+                <div class="modal-content">
+                    <div class="modal-header bg-white">
+                        <button class="btn btn-close" onclick="closemodalImg()"></button>
+                    </div>
+                    <div class="modal-bodys">
+                        <img id="modal-img" src="" alt="modal-img">
+                    </div>
+                </div>
+            </div>
+            <!-- แสดงรูป -->
+            <div class="div-show-imgs"></div>
+            <div class="div-show-video"></div>
+            <!-- กดเพื่อล้าง -->
+            <div class="text-end">
+                <button onclick="cleardivshowImg()" class="btn btn-danger mx-2" id="clearFiles">ล้างไฟล์ที่เลือก</button>
+            </div>
+        </div>
+        <div class="border p-3 shadow m-2">
+          <div class="form-floating">
+            <textarea class="form-control" name="message" id="message" style="height: 100px"></textarea>
+            <label for="floatingTextarea2">ใส่เนื้อหาที่ต้องการ post</label>
+          </div>
+        </div>
+    
+        <div class="text-end p-3 m-2">
+          <button class="btn btn-success" id="pagePost">โพสต์ตอนนี้</button>
+          <button class="btn btn-secondary" id="postDate">โพสต์ตามเวลา</button>
+        </div>
+      </div>
+    </div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios@1.6.4/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.2/dist/sweetalert2.all.min.js"></script>
+<script>
+  function getFiles(elementId) {
+    const files = document.querySelector(`#${elementId}`)
+
+    return files.files
+  }
+
+  function createObjectBlob(object) {
+    const objectKey = Object.keys(object)
+    const blobArray = []
+    objectKey.forEach(k => {
+      const blob = new Blob([object[k]], { type: object[k].type })
+      blobArray.push(blob)
+    })
+
+    return blobArray
+  }
+
+  function sendErrorAlert(message) {
+    Swal.fire({
+      text: message,
+      icon: "error",
+    })
+  }
+
+  function sendSuccessAlert(message) {
+    Swal.fire({
+      text: message,
+      icon: "success",
+    })
+  }
+</script>
+
+<script>
+  const pagesList = '<%- JSON.stringify(pagesList) %>'
+  const pagesListJson = JSON.parse(pagesList)
+  const groupsList = '<%- JSON.stringify(groupsList) %>'
+  const groupsListJson = JSON.parse(groupsList)
+  // const pagesList = ''
+  // const pagesListJson = ''
+  // const groupsList = ''
+  // const groupsListJson = ''
+
+  let pagesToken = []
+  let pagesId = []
+
+  let groupsId = []
+  let photoId = []
+
+  let blobVideo = ""
+  let videoId = ""
+
+  function cleardivshowImg(){
+    const divShowImg = document.querySelector('.div-show-imgs');
+    const divShowVideo = document.querySelector('.div-show-video');
+    divShowImg.innerHTML =""
+    divShowVideo.innerHTML =""
+  }
+  function createImage(event) {
+    const image = document.getElementById('show-img');
+    const divShowImg = document.querySelector('.div-show-imgs');
+    cleardivshowImg()
+    const imgfiles = event.target.files
+    for(let countImg=0;countImg<imgfiles.length;countImg++){
+        const file = imgfiles[countImg];
+        if (file) {
+            const src = URL.createObjectURL(file);
+            const img = `<img class="img-show" onclick="ShowmodalImg('${src}')" src="${src}" alt="${src}">`
+            const divboximg = document.createElement('div');
+            divboximg.setAttribute('class','box-img');
+            divboximg.innerHTML = img;
+            divShowImg.appendChild(divboximg);
+        } else {
+            Swal.fire("อัพโหลดไม่สำเร็จ", "อัพโหลดรูปไม่สำเร็จกรุณาอัพโหลดอีกครั้ง", "error")
+        }
+    }
+
+  }
+  function createVideo() {
+    const videoUploadElement = document.getElementById("videoUpload");
+    const file = videoUploadElement.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const videoElement = document.createElement("video");
+        videoElement.controls = true;
+        videoElement.style.marginTop = "25px";
+        videoElement.src = event.target.result;
+        const divShowVideo = document.querySelector(".div-show-video");
+        divShowVideo.innerHTML = "";
+        divShowVideo.appendChild(videoElement);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      console.error("No file selected for upload.");
+    }
+  }
+  function ShowmodalImg(src) {
+    const modal_img = document.getElementById('modal-img');
+    modal_img.src = src;
+    var modal = document.querySelector(".modal");
+    modal.style.display = "flex";
+  }
+  function closemodalImg() {
+    var modal = document.querySelector(".modal");
+    modal.style.display = "none";
+  }
+
+  $(document).ready(function() {
+    function showCalendar(event) {
+      if (event.target.value) {
+        var calendar = new Date().getDate();
+        $(event.target).datepicker({
+          format: "dd/mm/yyyy",
+          todayBtn: "linked",
+          todayHighlight: true,
+          autoclose: true,
+          defaultDate: calendar,
+        });
+      }
+    }
+    // $(document).on("click", "input[type='date']", showCalendar);
+    // $("#publishdate-sw").change(function() {
+    //   if ($(this).is(":checked") && $("#publish-time").val() === "") {
+    //     $(this)[0].checked = false
+    //     return sendErrorAlert("กรุณาใส่กำหนดการโพสต์ก่อนจึงจะติ๊กได้")
+    //   }
+    // })
+    
+    $("input.pageaccess").change(function(event) {
+      const value = $(this).val()
+      const id = event.target.id
+      
+      if ($(this).is(":checked")) {
+        pagesToken.push(value)
+        pagesId.push(id)
+      } else {
+        const index = pagesToken.indexOf(value)
+        if (index !== -1) {
+          pagesToken.splice(index, 1)
+        }
+      }
+
+      console.log(pagesToken)
+      console.log(pagesId)
+    })
+
+    $("input.groupaccess").change(function(event) {
+      const value = $(this).val()
+
+      if ($(this).is(":checked")) {
+        groupsId.push(value)
+      } else {
+        const index = groupsId.indexOf(value)
+        if (index !== -1) {
+          groupsId.splice(index, 1)
+        }
+      }
+
+      console.log(groupsId)
+    })
+
+    // โพสต์ลงเพจ
+    $("#pagePost").click(async function(event) {
+      if (pagesToken.length === 0 && groupsId.length === 0) {
+        return sendErrorAlert("กรุณาเลือกแหล่งที่ต้องการโพสต์ก่อน")
+      }
+      Swal.fire({
+        text: "ระบบกำลังทำการโพสต์กรุณารอสักครู่หน้าต่างนี้จะปิดลงอัตโนมัติ",
+        icon: "info",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        allowEnterKey: false,
+        didOpen: async () => {
+          Swal.showLoading()
+
+          const userToken = "<%- accessToken %>"
+
+          if ($("#selectType").val() === "picture") {
+            const uploadedFiles = getFiles("photoUpload")
+            const blobPhoto = createObjectBlob(uploadedFiles)
+            
+            // Post Page
+            for (const [index, pageToken] of pagesToken.entries()) {
+              for (const blob of blobPhoto) {
+                const formData = new FormData();
+                formData.append("source", blob);
+                formData.append("access_token", pageToken);
+                formData.append("published", false);
+
+                try {
+                  const photoResponse = await axios.post(`https://graph.facebook.com/v18.0/${pagesId[index]}/photos`, formData);
+                  photoId.push({ "media_fbid": photoResponse.data.id })
+                } catch {
+                  sendErrorAlert(`เพจ ${pagesListJson[index].name} ไม่สามารถอัพโหลดรูปได้`)
+                }
+              
+              }
+
+              const payload = {
+                message: $("#message").val(),
+                attached_media: photoId,
+                access_token: pageToken
+              }
+    
+              if ($("#publishdate-sw").is(":checked")) {
+                const timeNow = Math.floor(Date.now() / 1000)
+                const scheduled = Math.floor(new Date($("#publish-time").val()).getTime() / 1000)
+
+                if (scheduled - timeNow <= 600) {
+                  return sendErrorAlert("กรุณาตั้งเวลาให้มากกว่า 10")
+                }
+
+                payload["published"] = false
+                payload["scheduled_publish_time"] = scheduled
+              }
+              try {
+                const response = await axios.post(`https://graph.facebook.com/v18.0/${pagesId[index]}/feed`, payload);
+                photoId = []
+                console.log(response.data)
+              } catch(err) {
+                console.log(err)
+                sendErrorAlert(`เพจ ${pagesListJson[index].name} โพสต์ไม่สำเร็จกรุณาลองใหม่อีกครั้ง`)
+              }
+            }
+
+            // Post Group
+            for (const [index, groupId] of groupsId.entries()) {
+              for (const blob of blobPhoto) {
+                const formData = new FormData();
+                formData.append("source", blob);
+                formData.append("access_token", userToken);
+                formData.append("published", false);
+
+                try {
+                  const photoResponse = await axios.post(`https://graph.facebook.com/v18.0/${groupId}/photos`, formData);
+                  photoId.push({ "media_fbid": photoResponse.data.id })
+                } catch {
+                  sendErrorAlert(`กลุ่ม ${groupsListJson[index].name} ไม่สามารถอัพโหลดรูปได้`)
+                }
+              
+              }
+
+              const payload = {
+                message: $("#message").val(),
+                attached_media: photoId,
+                access_token: userToken
+              }
+
+              try {
+                const response = await axios.post(`https://graph.facebook.com/v18.0/${groupId}/feed`, payload);
+                photoId = []
+              } catch(err) {
+                // console.log(err)
+                sendErrorAlert(`กลุ่ม ${groupsListJson[index].name} โพสต์ไม่สำเร็จกรุณาลองใหม่อีกครั้ง`)
+              }
+            }
+          } else {
+
+            // โพสต์วิดีโอลงเพจ
+            for (const pageToken of pagesToken) {
+              const formData = new FormData()
+              formData.append("source", blobVideo, "video.mp4")
+              formData.append("access_token", pageToken)
+              formData.append("description", $("#message").val())
+    
+              try {
+                const videoResponse = await axios.post("https://graph.facebook.com/v18.0/me/videos", formData)
+                console.log(videoResponse.data)
+              } catch {
+                sendErrorAlert(`เพจ ${pagesListJson[index].name} ไม่สามารถโพสต์วิดีโอได้`)
+              }
+            }
+
+            // โพสต์วิดีโอลงกลุ่ม
+            for (const groupId of groupsId) {
+              const formData = new FormData()
+              formData.append("source", blobVideo, "video.mp4")
+              formData.append("access_token", userToken)
+              formData.append("description", $("#message").val())
+
+              try {
+                const videoResponse = await axios.post(`https://graph.facebook.com/v18.0/${groupId}/videos`, formData)
+                console.log(videoResponse.data)
+              } catch(err) {
+                sendErrorAlert(`กลุ่ม ${groupsListJson[index].name} ไม่สามารถโพสต์วิดีโอได้`)
+              }
+            }
+          }
+
+          cleardivshowImg()
+          $("#message").val("")
+          $("input.uploadFile").val("")
+          $("#show-img").attr("src", "#")
+          $("#show-img").hide()
+          return sendSuccessAlert("โพสต์สำเร็จเรียบร้อย")
+        },
+      })
+    })
+
+    $("#selectType").change(function(event) {
+      if ($(this).val() === "picture") {
+        $("#photoUpload").show()
+        $(".div-show-imgs").show()
+        $("#videoUpload").hide()
+        $(".div-show-video").hide()
+      } else {
+        $("#videoUpload").show()
+        $(".div-show-video").show()
+        $("#photoUpload").hide()
+        $(".div-show-imgs").hide()
+      }
+    })
+
+    $("input[type=file]").change(function(event) {
+      const files = event.target.files
+      const filesKey = Object.keys(files)
+
+      if ($("#selectType").val() === "picture") {
+        if (files.length > 4) {
+          event.target.value = ""
+
+          return sendErrorAlert("รูปของคุณมีมากกว่า 4 รูป กรุณาเลือกรูปให้น้อยลง")
+        }
+
+        createImage(event)
+        
+      } else {
+        const video = document.createElement("video")
+        video.onloadedmetadata = () => {
+
+          const duration = video.duration
+          
+          if (duration > 60) {
+            event.target.value = ""
+            return sendErrorAlert("วิดีโอของคุณมีความยาวมากกว่า 1 นาที")
+          }
+          createVideo()
+          const blob = new Blob(files, { type: files.type })
+          blobVideo = blob
+        }
+        video.src = URL.createObjectURL(files[0])
+      }
+    })
+
+    $("#clearGroups").click(function() {
+      const groups = $("input.groupaccess")
+      for (let i = 0; i < groups.length; i++) {
+        groups[i].checked = false
+      }
+
+      groupsId = []
+    })
+
+    $("#clearPages").click(function() {
+      const pages = $("input.pageaccess")
+      for (let i = 0; i < pages.length; i++) {
+        pages[i].checked = false
+      }
+
+      pagesId = []
+      pagesToken = []
+    })
+
+    $("#clearAll").click(function() {
+      const pages = $("input.pageaccess")
+      const groups = $("input.groupaccess")
+
+      for (let i = 0; i < pages.length; i++) {
+        pages[i].checked = false
+      }
+      for (let i = 0; i < groups.length; i++) {
+        groups[i].checked = false
+      }
+
+      pagesId = []
+      pagesToken = []
+      groupsId = []
+    })
+
+    $("#clearFiles").click(function() {
+      const files = $(".uploadFile")
+
+      for (let i = 0; i < files.length; i++) {
+        files[i].value = ""
+      }
+      $("#show-img").attr("src", "#")
+      $("#show-img").hide()
+    })
+
+    $("#postDate").click(async function() {
+      const datePicker = document.createElement("div")
+      datePicker.innerHTML = `
+        <input type="datetime-local" id="publish-time">
+      `
+      
+      const swalResult = await Swal.fire({
+        text: "",
+        html: datePicker
+      })
+      if (groupsId.length > 0) return sendErrorAlert("ขออภัยกลุ่มไม่สามารถโพสต์แบบกำหนดเวลาได้")
+      
+      const dateTime = $("#publish-time").val()
+      // console.log("dateTime", dateTime)
+
+      if (!dateTime) return sendErrorAlert("หากต้องการโพสต์กำหนดเวลาจะต้องเลือกเวลาก่อนจึงจะใช้งานได้")
+
+      const timeNow = Math.floor(Date.now() / 1000)
+      // console.log(timeNow)
+      const unixTime = Math.floor(new Date(dateTime).getTime() / 1000)
+      // console.log(unixTime)
+
+      if (unixTime - timeNow < 600) return sendErrorAlert("กรุณาเลือกเวลาให้มากกว่า 10 นาที")
+      if (unixTime - timeNow > 6_048_000) return sendErrorAlert("กรุณาเลือกเวลาให้น้อยกว่า 70 วัน")
+
+      if (swalResult.isConfirmed) {
+        if (pagesToken.length === 0 && groupsId.length === 0) {
+          return sendErrorAlert("กรุณาเลือกแหล่งที่ต้องการโพสต์ก่อน")
+        }
+        Swal.fire({
+          text: "ระบบกำลังทำการโพสต์กรุณารอสักครู่หน้าต่างนี้จะปิดลงอัตโนมัติ",
+          icon: "info",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          allowEnterKey: false,
+          didOpen: async () => {
+            Swal.showLoading()
+            if ($("#selectType").val() === "picture") {
+              const uploadedFiles = getFiles("photoUpload")
+              const blobPhoto = createObjectBlob(uploadedFiles)
+              
+              // Post Page
+              for (const [index, pageToken] of pagesToken.entries()) {
+                for (const blob of blobPhoto) {
+                  const formData = new FormData();
+                  formData.append("source", blob);
+                  formData.append("access_token", pageToken);
+                  formData.append("published", false);
+
+                  try {
+                    const photoResponse = await axios.post(`https://graph.facebook.com/v18.0/${pagesId[index]}/photos`, formData);
+                    photoId.push({ "media_fbid": photoResponse.data.id })
+                  } catch {
+                    sendErrorAlert("ไม่สามารถอัพโหลดรูปได้")
+                  }
+                
+                }
+
+                const payload = {
+                  message: $("#message").val(),
+                  attached_media: photoId,
+                  published: false,
+                  scheduled_publish_time: unixTime,
+                  access_token: pageToken
+                }
+
+                try {
+                  const response = await axios.post(`https://graph.facebook.com/v18.0/${pagesId[index]}/feed`, payload);
+                  photoId = []
+
+                  console.log(response.data)
+                } catch(err) {
+                  console.log(err)
+                  return sendErrorAlert("โพสต์ไม่สำเร็จกรุณาลองใหม่อีกครั้ง")
+                }
+              }
+            } else {
+              for (const pageToken of pagesToken) {
+                const formData = new FormData()
+                formData.append("source", blobVideo, "video.mp4")
+                formData.append("access_token", pageToken)
+                formData.append("description", $("#message").val())
+                formData.append("published", false)
+                formData.append("scheduled_publish_time", unixTime)
+      
+                try {
+                  const videoResponse = await axios.post("https://graph.facebook.com/v18.0/me/videos", formData)
+                  console.log(videoResponse.data)
+                } catch {
+                  return sendErrorAlert("ไม่สามารถโพสต์วิดีโอได้")
+                }
+              }
+            }
+
+            $("#message").val("")
+            $("input.uploadFile").val("")
+            $("#show-img").attr("src", "#")
+            $("#show-img").hide()
+            return sendSuccessAlert("โพสต์สำเร็จเรียบร้อย")
+          },
+        })
+      }
+
+      
+    })
+  })
+
+</script>
+</html>

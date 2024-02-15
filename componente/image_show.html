@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload and Display</title>
+    <style>
+        .image-container {
+            position: relative;
+            display: inline-block;
+        }
+        .imagePreview{
+            width: 250px;
+            height: 250px;
+        }
+        .upload-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+    <h2>Upload Image</h2>
+    <input type="file" id="imageInput" accept="image/*">
+    <div id="imagePreview" class="imagePreview"></div>
+
+    <script>
+        document.getElementById('imageInput').addEventListener('change', function(event) {
+            const fileInput = event.target;
+            const imagePreview = document.getElementById('imagePreview');
+
+            // Check if a file is selected
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    // Create an image element and set its source to the result of FileReader
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.maxWidth = '100%';
+                    img.style.maxHeight = '100%';
+                    img.style.display = 'block';
+
+                    // Clear previous image if any and append the new image
+                    imagePreview.innerHTML = '';
+                    imagePreview.appendChild(img);
+
+                    // Create an upload button with a class
+                    const uploadButton = document.createElement('button');
+                    uploadButton.textContent = 'Upload';
+                    uploadButton.className = 'upload-button'; // Add a class to the button
+                    uploadButton.onclick = function() {
+                        // Call your upload function here
+                        // For demonstration purposes, just alert that the file is uploaded
+                        alert('File uploaded!');
+                    };
+                    // Wrap image and button inside a container
+                    const container = document.createElement('div');
+                    container.className = 'image-container';
+                    container.appendChild(img);
+                    container.appendChild(uploadButton);
+                    imagePreview.appendChild(container);
+                };
+                // Read the selected file as Data URL
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                // If no file is selected, clear the image preview
+                imagePreview.innerHTML = '';
+            }
+        });
+    </script>
+</body>
+</html>
+
+
